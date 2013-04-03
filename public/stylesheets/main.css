@@ -1,0 +1,28 @@
+#noWebSocketSupp {
+	display: none;
+	border: 2px solid #cb0000;
+	background-color: #FFE1E1;
+	margin: 20px;
+	margin-top: 5px;
+	padding: 10px;
+	font-size: 16px;
+	color: #800000;
+	height: 2em;
+}
+
+#webSocketSupp {
+	display: none;
+	border: 2px solid #060;
+	background-color: #F0FFF0;
+	margin: 20px;
+	margin-top: 5px;
+	padding: 10px;
+	font-size: 16px;
+	color: #0d8900;
+	height: 2em;
+}
+
+.clearfix {
+	zoom: 1;
+}
+

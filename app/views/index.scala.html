@@ -1,29 +1,127 @@
 @(message: String) @main("Welcome to Play 2.1") {
 
+<div id="webSocketSupp" style="display: block;">
+	<div style="float: left;">
+		<img src="@routes.Assets.at("images/check.png")" width="36"
+			height="36" align="absmiddle">
+	</div>
+	<div
+		style="float: left; width: 600px; margin-left: 10px; position: relative; top: 8px;">
+		This browser supports WebSocket.</div>
+	<div class="clearfix"></div>
+</div>
+<div id="noWebSocketSupp">
+	<div style="float: left;">
+		<img src="@routes.Assets.at("images/cross.png")" width="36"
+			height="36" align="absmiddle">
+	</div>
+	<div style="float: left; width: 600px; margin-left: 10px;">
+		<p>Uh-oh, the browser you're using doesn't have native support for
+			WebSocket. That means you can't run this demo.</p>
+		<p>The following link lists the browsers that support WebSocket:</p>
+		<p>
+			<a href="http://caniuse.com/#feat=websockets">http://caniuse.com/#feat=websockets</a>
+		</p>
+	</div>
+	<div class="clearfix"></div>
+</div>
+
+<div id="onError" class="alert-message error">
+
+	<p>
+		<strong>Oops!</strong> <span></span>
+	</p>
+</div>
+
 <div class="greeting"></div>
-<button class="send">Send</button>
+
+<input type="button" class="connect" value="Connect">
+<input type="button" class="disconnect" value="Disconnect">
+<input type="button" class="send" value="Send">
 
 <script type="text/javascript" charset="utf-8">
 	$(function() {
 		var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
-		
 		var loc = window.location, new_uri;
 		if (loc.protocol === "https:") {
-		    new_uri = "wss:";
+			new_uri = "wss:";
 		} else {
-		    new_uri = "ws:";
+			new_uri = "ws:";
 		}
 		new_uri += "//" + loc.host + "@routes.Application.sockHandler()";
-		//new_uri += loc.pathname + "@routes.Application.sockHandler()";
-		var sock = new WS(new_uri)
 
-		sock.onmessage = function(event) {
-			$('.greeting').append(event.data)
+		$('input.connect').click(function() {
+			websocket = new WS(new_uri);
+			websocket.onopen = function(evt) {
+				onOpen(evt)
+			};
+			websocket.onclose = function(evt) {
+				onClose(evt)
+			};
+			websocket.onmessage = function(evt) {
+				onMessage(evt)
+			};
+			websocket.onerror = function(evt) {
+				onError(evt)
+			};
+		});
+
+		setGuiConnected(false);
+
+		$('input.disconnect').click(function() {
+			websocket.close()
+		});
+
+		$('input.send').click(function() {
+			websocket.send(JSON.stringify({
+				text : "I'm sending a message now."
+			}))
+		});
+
+		function onOpen(evt) {
+			$('.greeting').append(" CONNECTED");
+			setGuiConnected(true);
 		}
 
-		$('button.send').click(function() {
-			sock.send("I'm sending a message now.")
-		});
+		function onClose(evt) {
+			$('.greeting').append(" DISCONNECTED");
+			setGuiConnected(false);
+		}
+
+		function onMessage(evt) {
+			 var data = JSON.parse(event.data)
+             
+             // Handle errors
+             if(data.error) {
+            	 onClose(evt)                 
+                 $("#onError span").text(data.error)
+                 $("#onError").show()
+                 return
+             } else {
+            	 $('.greeting').append(
+     					'<span style="color: blue;">RESPONSE: ' + evt.data
+     							+ '</span>')
+             }
+		}
+
+		function onError(evt) {
+			$('.greeting').append(
+					'<span style="color: red;">ERROR:</span> ' + evt.data);
+		}
+
+		function setGuiConnected(isConnected) {
+			if (isConnected) {
+				$('input.connect').attr("disabled", "disabled");
+				$('input.disconnect').removeAttr("disabled");
+				$('input.send').removeAttr("disabled");
+			} else {
+				$('input.connect').removeAttr("disabled");
+				$('input.disconnect').attr("disabled", "disabled");
+				$('input.send').attr("disabled", "disabled");
+			}
+			$('input.disconnect').disabled = !isConnected;
+			$('input.send').disabled = !isConnected;
+		}
 	})
 </script>
 

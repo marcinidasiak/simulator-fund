@@ -16,20 +16,17 @@ public class Application extends Controller {
     }
     
     
-    public static WebSocket<String> sockHandler() {
-        return new WebSocket<String>() {
+    public static WebSocket<JsonNode> sockHandler() {
+        return new WebSocket<JsonNode>() {
             // called when the websocket is established
-            public void onReady(WebSocket.In<String> in,
-                    final WebSocket.Out<String> out) {
-                // register a callback for processing instream events
-                in.onMessage(new Callback<String>() {
-                    public void invoke(String event) {
-                    	System.out.println(event);
-                    }
-                });
-
-                // write out a greeting
-                out.write("I'm contacting you regarding your recent websocket.");
+            public void onReady(WebSocket.In<JsonNode> in,
+                    WebSocket.Out<JsonNode> out) {
+                try {
+					Market.join("client", in, out);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             }
         };
     }
