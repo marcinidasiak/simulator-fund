@@ -1,7 +1,30 @@
-@(message: String)
+@(message: String) @main("Welcome to Play 2.1") {
 
-@main("Welcome to Play 2.1") {
-    
-    @play20.welcome(message, style = "Java")
-    
+<div class="greeting"></div>
+<button class="send">Send</button>
+
+<script type="text/javascript" charset="utf-8">
+	$(function() {
+		var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
+		
+		var loc = window.location, new_uri;
+		if (loc.protocol === "https:") {
+		    new_uri = "wss:";
+		} else {
+		    new_uri = "ws:";
+		}
+		new_uri += "//" + loc.host + "@routes.Application.sockHandler()";
+		//new_uri += loc.pathname + "@routes.Application.sockHandler()";
+		var sock = new WS(new_uri)
+
+		sock.onmessage = function(event) {
+			$('.greeting').append(event.data)
+		}
+
+		$('button.send').click(function() {
+			sock.send("I'm sending a message now.")
+		});
+	})
+</script>
+
 }
