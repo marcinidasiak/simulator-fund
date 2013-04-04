@@ -31,8 +31,8 @@ public class Symulator {
         
         // Make the robot talk every 10 seconds
         Akka.system().scheduler().schedule(
-            Duration.create(10, SECONDS),
-            Duration.create(10, SECONDS),
+            Duration.create(1, SECONDS),
+            Duration.create(1, SECONDS),
             market,
             new Messages.Valuation("Robot"),
             Akka.system().dispatcher()

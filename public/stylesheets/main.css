@@ -26,3 +26,7 @@
 	zoom: 1;
 }
 
+#onError, #onChat {
+    display: none;
+}
+

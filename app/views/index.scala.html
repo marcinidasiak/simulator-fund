@@ -2,7 +2,7 @@
 
 <div id="webSocketSupp" style="display: block;">
 	<div style="float: left;">
-		<img src="@routes.Assets.at("images/check.png")" width="36"
+		<img src="@routes.Assets.at(" images/check.png")" width="36"
 			height="36" align="absmiddle">
 	</div>
 	<div
@@ -12,7 +12,7 @@
 </div>
 <div id="noWebSocketSupp">
 	<div style="float: left;">
-		<img src="@routes.Assets.at("images/cross.png")" width="36"
+		<img src="@routes.Assets.at(" images/cross.png")" width="36"
 			height="36" align="absmiddle">
 	</div>
 	<div style="float: left; width: 600px; margin-left: 10px;">
@@ -33,11 +33,17 @@
 	</p>
 </div>
 
-<div class="greeting"></div>
+<div class="fund">
+	<div class="name_title">Nazwa</div>
+	<div class="price_title">Cena</div>
+	<div class="change_title">Kurs</div>
+	<div class="code_title">Nazwa kodowa</div>
+	<div class="valuation"></div>
+</div>
 
-<input type="button" class="connect" value="Connect">
-<input type="button" class="disconnect" value="Disconnect">
-<input type="button" class="send" value="Send">
+<input type="button" class="connect" value="Włącz">
+<input type="button" class="disconnect" value="Wyłącz">
+<input type="button" class="send" value="Zatwierdź">
 
 <script type="text/javascript" charset="utf-8">
 	$(function() {
@@ -79,29 +85,33 @@
 		});
 
 		function onOpen(evt) {
-			$('.greeting').append(" CONNECTED");
 			setGuiConnected(true);
 		}
 
 		function onClose(evt) {
-			$('.greeting').append(" DISCONNECTED");
 			setGuiConnected(false);
 		}
 
 		function onMessage(evt) {
-			 var data = JSON.parse(event.data)
-             
-             // Handle errors
-             if(data.error) {
-            	 onClose(evt)                 
-                 $("#onError span").text(data.error)
-                 $("#onError").show()
-                 return
-             } else {
-            	 $('.greeting').append(
-     					'<span style="color: blue;">RESPONSE: ' + evt.data
-     							+ '</span>')
-             }
+			var data = JSON.parse(event.data)
+
+			// Handle errors
+			if (data.error) {
+				onClose(evt)
+				$("#onError span").text(data.error)
+				$("#onError").show()
+				return
+
+			} else {
+
+				$(".valuation").html('') 
+                $(data.valuation).each(function() {
+                    $(".valuation").append('<div class="name">' + this.name+ '</div>');
+                    $(".valuation").append('<div class="price">' + this.price + ' ' + this.currency + '</div>');
+                    $(".valuation").append('<div class="change">' + this.change + ' ' + this.currency + '</div>');
+                    $(".valuation").append('<div class="change">' + this.code + '</div>');
+                })
+			}
 		}
 
 		function onError(evt) {
