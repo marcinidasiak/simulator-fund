@@ -1,4 +1,4 @@
-package model;
+package support;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
