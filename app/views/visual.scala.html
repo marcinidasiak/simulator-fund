@@ -6,6 +6,12 @@
 	</p>
 </div>
 
+<div id="onSuccess" class="alert-message success">
+	<p>
+		<strong>:)</strong> <span></span>
+	</p>
+</div>
+
 <div class="form">
 	<form>
 		<select name="code" value="">
@@ -70,6 +76,8 @@
 		new_uri += "//" + loc.host + "@routes.Application.service()";
 		setGuiConnected(false);
 		
+		
+		
 		$('input.connect').click(function() {
 			websocket = new WS(new_uri);
 			websocket.onopen = function(evt) {
@@ -103,7 +111,7 @@
 							buy.numberUnit = $(
 									':input[type="number"][name="numberUnit"]')
 									.val();
-							buy.type = "buy";
+							buy.type = "BUY";
 
 							websocket.send(JSON.stringify(buy))
 						});
@@ -119,7 +127,7 @@
 							buy.numberUnit = $(
 									':input[type="number"][name="numberUnit"]')
 									.val();
-							buy.type = "sell";
+							buy.type = "SELL";
 
 							websocket.send(JSON.stringify(buy))
 						});
@@ -134,8 +142,17 @@
 		function onMessage(evt) {
 			var data = JSON.parse(evt.data)
 
-			// Handle errors
-			if (data.error) {
+			
+			if (data.kind == "warning"){
+				if(data.success){
+					$("#onSuccess span").text(data.success)
+					$("#onSuccess").show()						
+				} else if (data.error){
+					$("#onError span").text(data.error)
+					$("#onError").show()
+				}
+				
+			} else if (data.error) {
 				onClose(evt)
 				$("#onError span").text(data.error)
 				$("#onError").show()
@@ -166,6 +183,8 @@
 							})
 				} else if (data.kind == "wallet") {
 					setGuiConnected(true);
+					$("#onSuccess").hide()						
+					$("#onError").hide()
 					$(".wallet").html('')
 					$(".wallet").append(
 							'<div class="cash span4">' + data.wallet.cash + ' '
@@ -189,7 +208,7 @@
 												+ this.numberUnit
 												+ '</div></div>');
 							})
-				}
+				} 
 
 			}
 		}

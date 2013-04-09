@@ -60,10 +60,11 @@ public class FundInWallet implements Serializable {
 	/**
 	 * Returns the number of units
 	 * 
-	 * @return BigInteger (NumberUnitException if create FundInWallet() without parameters)
+	 * @return BigInteger (NumberUnitException if create FundInWallet() without
+	 *         parameters)
 	 */
 	public BigInteger getNumberUnit() {
-		if(numberUnit==null){
+		if (numberUnit == null) {
 			throw new NumberUnitException(NUMBERUNIT_GET);
 		}
 		return numberUnit;
@@ -78,7 +79,7 @@ public class FundInWallet implements Serializable {
 	 */
 
 	public void setNumberUnit(BigInteger numberUnit) {
-		if (numberUnit==null || BigInteger.ZERO.compareTo(numberUnit) > 0) {
+		if (numberUnit == null || BigInteger.ZERO.compareTo(numberUnit) > 0) {
 			throw new NumberUnitException(NUMBERUNIT_SET);
 		} else {
 			this.numberUnit = numberUnit;
@@ -92,9 +93,9 @@ public class FundInWallet implements Serializable {
 	 */
 
 	public UnitType getType() {
-		if(type==null){
+		if (type == null) {
 			throw new UnitTypeException(UNITTYPE_GET);
-		} else {			
+		} else {
 			return type;
 		}
 	}
@@ -121,7 +122,7 @@ public class FundInWallet implements Serializable {
 	 */
 
 	public InvestmentFund getFund() {
-		if(fund==null){
+		if (fund == null) {
 			throw new InvestmentFundException(INVESTMENTFUND_GET);
 		}
 		return fund;
@@ -129,15 +130,16 @@ public class FundInWallet implements Serializable {
 
 	/**
 	 * Sets fund
+	 * 
 	 * @param fund
-	 * InvestmentFund can not be null (InvestmentFundException)
+	 *            InvestmentFund can not be null (InvestmentFundException)
 	 */
 
 	public void setFund(InvestmentFund fund) {
 		if (fund == null) {
 			throw new InvestmentFundException(INVESTMENTFUND_SET);
 		} else {
-			this.fund = fund;			
+			this.fund = fund;
 		}
 	}
 
@@ -167,6 +169,5 @@ public class FundInWallet implements Serializable {
 			return false;
 		return true;
 	}
-	
-	
+
 }

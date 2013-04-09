@@ -4,8 +4,23 @@ import org.codehaus.jackson.JsonNode;
 
 import play.mvc.WebSocket;
 
+/**
+ * 
+ * Class delivery Messages to communication with Actor. Actor receives messages
+ * in method onReceive
+ * 
+ * @author Marcin Idasiak
+ * 
+ */
+
 public class Messages {
 
+	/**
+	 * Message about joining a new user
+	 * 
+	 * @author Marcin Idasiak
+	 * 
+	 */
 	public static class Join {
 
 		final String username;
@@ -18,6 +33,12 @@ public class Messages {
 
 	}
 
+	/**
+	 * Message on the user's request
+	 * 
+	 * @author Marcin Idasiak
+	 * 
+	 */
 	public static class Command {
 
 		final String username;
@@ -30,6 +51,13 @@ public class Messages {
 
 	}
 
+	/**
+	 * Message to generate a new valuation.
+	 * 
+	 * @author Marcin Idasiak
+	 * 
+	 */
+
 	public static class Valuation {
 		final String username;
 
@@ -38,6 +66,12 @@ public class Messages {
 		}
 	}
 
+	/**
+	 * The news of the end user connection
+	 * 
+	 * @author Marcin Idasiak
+	 * 
+	 */
 	public static class Quit {
 
 		final String username;

@@ -29,4 +29,4 @@ Launching the application for eurobank:
 
 Architecture
 ---------------------------------------
-I use Play framework as the backbone of my application. AKKA also used a framework based on the pattern actor. In order to maintain the connection with the browser used the WebSocket provides communication in both directions. The application was also used the strategy pattern and Factory.
+I use Play framework as the backbone of my application. AKKA also used a framework based on the pattern actor. In order to maintain the connection with the browser used the WebSocket provides communication in both directions. The application was also used the strategy pattern, Factory and Facade. In addition, I used JAXB to generate XML.

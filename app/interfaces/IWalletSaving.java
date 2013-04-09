@@ -8,6 +8,11 @@ import org.codehaus.jackson.node.ObjectNode;
 import enums.InvestmentFund;
 import enums.UnitType;
 
+/**
+ * The interface defines the operations of wallet.
+ * @author Marcin Idasiak
+ *
+ */
 public interface IWalletSaving {
 	public BigDecimal valuationWallet();
 	public  String buy(BigInteger amount, UnitType type, InvestmentFund fund,

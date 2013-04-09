@@ -11,6 +11,7 @@ import static support.SUPPLIER.TOTALVALUEFUNDS_SET;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -46,7 +47,7 @@ public class Wallet implements Serializable {
 	public Wallet() {
 		super();
 		this.cash = null;
-		this.funds = null;
+		this.funds = new LinkedList<FundInWallet>();
 		this.totalValueFunds = null;
 		this.currency = null;
 	}

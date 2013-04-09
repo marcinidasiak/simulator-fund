@@ -1,10 +1,12 @@
 package exception;
 
+/**
+ * Exception defining event-related setting, or download a price null
+ * @author Marcin Idasiak
+ *
+ */
 public class PriceException extends RuntimeException {
 
-	/**
-	 *  Exception indicating irregularities related to the price of the funds.
-	 */
 	private static final long serialVersionUID = -6603761543928006724L;
 
 	public PriceException(String message) {

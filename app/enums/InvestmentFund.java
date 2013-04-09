@@ -4,6 +4,12 @@ import java.math.BigDecimal;
 
 import exception.PriceException;
 
+
+/**
+ * Enum which is the heart of the application. Defines the investment funds and their default values.
+ * @author Marcin Idasiak
+ *
+ */
 public enum InvestmentFund {
 	FRP("Fundusz Rynku Pieniężnego"), FO("Fundusz Obligacji"), FSW(
 			"Fundusz Stabilnego Wzrostu"), FZ("Fundusz Zrównoważony"), FA(

@@ -3,14 +3,12 @@ package actor;
 import static akka.pattern.Patterns.ask;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static support.SUPPLIER.PRICE;
+import interfaces.IExecutor;
 import interfaces.IValuationUnitFund;
 import interfaces.IWalletSaving;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -26,11 +24,11 @@ import play.mvc.WebSocket;
 import play.mvc.WebSocket.Out;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
-import support.CommandTransaction;
+import support.Executor;
 import support.FundIteam;
 import support.SUPPLIER;
-import support.WalletFactory;
 import valuation.RandomPricingModel;
+import wallet.WalletFactory;
 import actor.Messages.Command;
 import actor.Messages.Join;
 import actor.Messages.Quit;
@@ -39,20 +37,42 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import enums.InvestmentFund;
-import enums.UnitType;
 
 /**
  * Market is an Actor.
+ * 
+ * @author Marcin Idasiak
  */
 public class Market extends UntypedActor {
+
+	private class Account {
+		private WebSocket.Out<JsonNode> channel;
+		private IWalletSaving wallet;
+
+		public Account(Out<JsonNode> channel, IWalletSaving wallet) {
+			super();
+			this.channel = channel;
+			this.wallet = wallet;
+		}
+
+		public WebSocket.Out<JsonNode> getChannel() {
+			return channel;
+		}
+
+		public IWalletSaving getWalletSaving() {
+			return wallet;
+		}
+	}
 
 	// Default market.
 	static ActorRef defaultMarket = Akka.system().actorOf(
 			new Props(Market.class));
-
 	// Market bussiness logic
 	IValuationUnitFund source = new RandomPricingModel();
+	IExecutor executor = new Executor();
+
 	InvestmentFund[] data = null;
+
 	DateTime updateDate = DateTime.now(DateTimeZone.forID("Europe/Warsaw"));
 
 	// Members of this market.
@@ -78,19 +98,6 @@ public class Market extends UntypedActor {
 			// For each event received on the socket,
 			in.onMessage(new Callback<JsonNode>() {
 				public void invoke(JsonNode event) {
-
-					out.write(event);
-
-					String code = event.findPath("code").getTextValue();
-					String type = event.findPath("type").getTextValue();
-					String typefund = event.findPath("typefund").getTextValue();
-					String numberUnit = event.findPath("numberUnit")
-							.getTextValue();
-					out.write(Json.toJson(code));
-					out.write(Json.toJson(type));
-					out.write(Json.toJson(typefund));
-					out.write(Json.toJson(numberUnit));
-					out.write(Json.toJson(type.equals("buy")));
 					defaultMarket.tell(new Command(username, event),
 							defaultMarket);
 				}
@@ -116,38 +123,189 @@ public class Market extends UntypedActor {
 		}
 	}
 
-	private void shutdown() {
-		data = null;
+	/**
+	 * Calculation Wallet
+	 * 
+	 * @param valuation
+	 *            message from Actor
+	 */
+
+	private void calculateWallet(Valuation valuation) {
+		for (String username : members.keySet()) {
+			if (!username.equals(valuation.username)) {
+				calculateWalletFor(username);
+			}
+		}
+
 	}
 
-	private void start() {
-		if (data == null) {
-			data = InvestmentFund.values();
-			for (InvestmentFund fund : data) {
-				fund.setPrice(PRICE);
-			}
-			updateDate = getDateTimeNow();
-		}
+	/**
+	 * Calculation Wallet for one user
+	 * 
+	 * @param username
+	 */
+
+	private void calculateWalletFor(String username) {
+		Account account = members.get(username);
+		account.wallet.valuationWallet();
+
+		IWalletSaving wallet = account.getWalletSaving();
+
+		notify("wallet", username, username, wallet.createJson());
 	}
+
+	/**
+	 * Get current valuation
+	 * 
+	 * @return
+	 */
+
+	private InvestmentFund[] getDate() {
+		return data;
+	}
+
+	/**
+	 * Get Data time last valuation
+	 * 
+	 * @return
+	 */
 
 	private DateTime getDateTimeNow() {
 		return DateTime.now(DateTimeZone.forID("Europe/Warsaw"));
-	}
-
-	private void setDateTimeNow() {
-		updateDate = getDateTimeNow();
 	}
 
 	private DateTime getDateTimeUpdate() {
 		return getDateTimeNow();
 	}
 
+	/**
+	 * Get Executor
+	 * 
+	 * @return
+	 */
+
+	public IExecutor getExecutor() {
+		return executor;
+	}
+
+	/**
+	 * get new valuation
+	 * 
+	 * @return
+	 */
+	public IValuationUnitFund getSource() {
+		return source;
+	}
+
+	/**
+	 * 
+	 * Send a Json event to member
+	 * 
+	 * @param kind
+	 * @param fromUser
+	 * @param toUser
+	 * @param node
+	 */
+	public void notify(String kind, String fromUser, String toUser,
+			ObjectNode node) {
+		Account fromUserAccount = members.get(fromUser);
+		Account toUserAccount = members.get(toUser);
+
+		if (fromUserAccount != null && toUserAccount != null) {
+			ObjectNode event = Json.newObject();
+			event.put("kind", kind);
+			event.put("user", fromUser);
+			event.putAll(node);
+
+			ArrayNode m = event.putArray("members");
+			for (String u : members.keySet()) {
+				m.add(u);
+			}
+
+			toUserAccount.getChannel().write(event);
+		}
+
+	}
+
+	/**
+	 * 
+	 * Send a Json event to all members
+	 * 
+	 * @param kind
+	 * @param user
+	 * @param node
+	 */
+	public void notifyAll(String kind, String user, ObjectNode node) {
+		for (Account account : members.values()) {
+
+			ObjectNode event = Json.newObject();
+			event.put("kind", kind);
+			event.put("user", user);
+			event.putAll(node);
+
+			ArrayNode m = event.putArray("members");
+			for (String u : members.keySet()) {
+				m.add(u);
+			}
+			account.getChannel().write(event);
+		}
+	}
+
+	/**
+	 * 
+	 * Send a Json event to all members
+	 * 
+	 * @param kind
+	 * @param user
+	 * @param text
+	 */
+	public void notifyAll(String kind, String user, String text) {
+		for (Account account : members.values()) {
+
+			ObjectNode event = Json.newObject();
+			event.put("kind", kind);
+			event.put("user", user);
+			event.put("message", text);
+
+			ArrayNode m = event.putArray("members");
+			for (String u : members.keySet()) {
+				m.add(u);
+			}
+
+			account.getChannel().write(event);
+		}
+	}
+
+	/**
+	 * Handle Command from user
+	 * 
+	 * @param command
+	 */
+
+	private void onCommand(Command command) {
+		IWalletSaving wallet = members.get(command.username).getWalletSaving();
+		InvestmentFund fund = executor.decode(command.event);
+		if (wallet != null) {
+			ObjectNode event = executor.transaction(command.event, wallet,
+					fund.getPrice());
+			calculateWalletFor(command.username);
+			notify("warning", SUPPLIER.SYMULATOR, command.username, event);
+		}
+
+	}
+
+	/**
+	 * Join new user
+	 * 
+	 * @param join
+	 */
+
 	private void onJoin(Join join) {
 		// Check if this username is free.
 		if (members.containsKey(join.username)) {
 			getSender().tell("This username is already used", getSelf());
 		} else {
-			IWalletSaving walletSaving = WalletFactory.product();
+			IWalletSaving walletSaving = WalletFactory.getFactory().product();
 			String message = walletSaving.read(SUPPLIER.LOCATION);
 			if (message == null) {
 				members.put(join.username, new Account(join.channel,
@@ -160,80 +318,11 @@ public class Market extends UntypedActor {
 		}
 	}
 
-	private InvestmentFund findData(String code) {
-		for (InvestmentFund fund : getDate()) {
-			if (fund.toString().equals(code)) {
-				return fund;
-			}
-		}
-		return null;
-	}
-
-	private BigInteger validateNumber(String number) {
-		if (Pattern.matches("\\d+", number)) {
-			return new BigInteger(number);
-		} else {
-			return null;
-		}
-	}
-
-	private void sendError(String message, String fromUser, String toUser) {
-		ObjectNode content = Json.newObject();
-		content.put("error", message);
-		notify("error", fromUser, toUser, content);
-	}
-
-	private void validation(CommandTransaction ct, String username) {
-		InvestmentFund fund = findData(ct.getCode());
-		BigInteger amount = validateNumber(ct.getNumberUnit());
-		BigDecimal price = (fund == null) ? null : fund.getPrice();
-		UnitType type = null;
-		try {
-			System.out.println(ct.getTypefund());
-			type = UnitType.valueOf(ct.getTypefund());
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		}
-		
-		String message = null;
-
-		if (amount == null) {
-			message = SUPPLIER.PARAMETR_AMOUNT_ERROR;
-		} else if (price == null) {
-			message = SUPPLIER.PARAMETR_FUND_ERROR;
-		} else if (type == null) {
-			message = SUPPLIER.PARAMETR_TYPE_ERROR;
-		} else {
-			if (ct.getType().equals("buy")) {
-				members.get(username).getWalletSaving()
-						.buy(amount, type, fund, price);
-
-			} else if (ct.getType().equals("sell")) {
-				members.get(username).getWalletSaving()
-						.sell(amount, type, fund, price);
-			} else {
-				message = SUPPLIER.PARAMETR_KIND_ERROR;
-			}
-		}
-		if(message != null) {
-			sendError(message, SUPPLIER.SYMULATOR, SUPPLIER.USERNAME);
-		}
-		notify("wallet", SUPPLIER.SYMULATOR, username, members.get(username).getWalletSaving().createJson());
-	}
-
-	private void onCommand(Command command) {
-		JsonNode content = Json.toJson(command.event);
-
-		String code = content.findPath("code").getTextValue();
-		String type = content.findPath("type").getTextValue();
-		String typefund = content.findPath("typefund").getTextValue();
-		String numberUnit = content.findPath("numberUnit").getTextValue();
-		CommandTransaction trans = new CommandTransaction(code, type, typefund,
-				numberUnit);
-		if (trans != null) {
-			validation(trans, command.username);
-		}
-	}
+	/**
+	 * Close connection for user from server
+	 * 
+	 * @param quit
+	 */
 
 	private void onQuit(Quit quit) {
 
@@ -243,53 +332,9 @@ public class Market extends UntypedActor {
 		shutdown();
 	}
 
-	private void calculateWallet(Valuation valuation) {
-		for (String username : members.keySet()) {
-			if (!username.equals(valuation.username)) {
-				Account account = members.get(username);
-				account.wallet.valuationWallet();
-
-				IWalletSaving wallet = account.getWalletSaving();
-
-				notify("wallet", valuation.username, username, wallet.createJson());
-			}
-		}
-
-	}
-
-	private void onValuation(Valuation valuation) {
-		if (getDate() != null) {
-			FundIteam it = source.newPrice();
-			updateDate(it);
-
-			ObjectNode event = Json.newObject();
-			event.put("time", getDateTimeUpdate().toString());
-			ArrayNode event_kind = event.putArray("valuation");
-			for (InvestmentFund fund : getDate()) {
-				ObjectNode event_fund = Json.newObject();
-				event_fund.put("name", fund.getName());
-				event_fund.put("price", fund.getPrice());
-				event_fund.put("change", it.get(fund.toString()));
-				event_fund.put("currency", fund.getCurrency());
-				event_fund.put("code", fund.toString());
-				event_kind.add(Json.toJson(event_fund));
-			}
-			notifyAll("valuation", valuation.username, event);
-			calculateWallet(valuation);
-		}
-	}
-
-	private void updateDate(FundIteam it) {
-		for (InvestmentFund fund : getDate()) {
-			fund.addPrice(it.get(fund.toString()));
-		}
-		setDateTimeNow();
-	}
-
-	private InvestmentFund[] getDate() {
-		return data;
-	}
-
+	/**
+	 * Main method for handle Actors
+	 */
 	@Override
 	public void onReceive(Object message) throws Exception {
 		if (message instanceof Valuation) {
@@ -314,88 +359,96 @@ public class Market extends UntypedActor {
 		}
 	}
 
-	// Send a Json event to member
-	public void notify(String kind, String fromUser, String toUser,
-			ObjectNode node) {
-		Account fromUserAccount = members.get(fromUser);
-		Account toUserAccount = members.get(toUser);
-
-		if (fromUserAccount != null && toUserAccount != null) {
-			ObjectNode event = Json.newObject();
-			event.put("kind", kind);
-			event.put("user", fromUser);
-			event.putAll(node);
-
-			ArrayNode m = event.putArray("members");
-			for (String u : members.keySet()) {
-				m.add(u);
-			}
-
-			toUserAccount.getChannel().write(event);
-		}
-
-	}
-
-	// Send a Json event to all members
-	public void notifyAll(String kind, String user, String text) {
-		for (Account account : members.values()) {
+	/**
+	 * Request new valuation and send response
+	 * 
+	 * @param valuation
+	 */
+	private void onValuation(Valuation valuation) {
+		if (getDate() != null) {
+			FundIteam it = source.newPrice();
+			updateDate(it);
 
 			ObjectNode event = Json.newObject();
-			event.put("kind", kind);
-			event.put("user", user);
-			event.put("message", text);
-
-			ArrayNode m = event.putArray("members");
-			for (String u : members.keySet()) {
-				m.add(u);
+			event.put("time", getDateTimeUpdate().toString());
+			ArrayNode event_kind = event.putArray("valuation");
+			for (InvestmentFund fund : getDate()) {
+				ObjectNode event_fund = Json.newObject();
+				event_fund.put("name", fund.getName());
+				event_fund.put("price", fund.getPrice());
+				event_fund.put("change", it.get(fund.toString()));
+				event_fund.put("currency", fund.getCurrency());
+				event_fund.put("code", fund.toString());
+				event_kind.add(Json.toJson(event_fund));
 			}
-
-			account.getChannel().write(event);
+			notifyAll("valuation", valuation.username, event);
+			calculateWallet(valuation);
 		}
 	}
 
-	// Send a Json event to all members
-	public void notifyAll(String kind, String user, ObjectNode node) {
-		for (Account account : members.values()) {
-
-			ObjectNode event = Json.newObject();
-			event.put("kind", kind);
-			event.put("user", user);
-			event.putAll(node);
-
-			ArrayNode m = event.putArray("members");
-			for (String u : members.keySet()) {
-				m.add(u);
-			}
-			account.getChannel().write(event);
-		}
+	/**
+	 * Send error to user
+	 * @param message
+	 * @param fromUser
+	 * @param toUser
+	 */
+	private void sendError(String message, String fromUser, String toUser) {
+		ObjectNode content = Json.newObject();
+		content.put("error", message);
+		notify("error", fromUser, toUser, content);
 	}
 
-	public IValuationUnitFund getSource() {
-		return source;
+	/**
+	 * Set current date time
+	 */
+	private void setDateTimeNow() {
+		updateDate = getDateTimeNow();
 	}
 
+	/**
+	 * Set new Executor
+	 * @param executor
+	 */
+	public void setExecutor(IExecutor executor) {
+		this.executor = executor;
+	}
+
+	/**
+	 * Set new IValuationUnitFund
+	 * @param source
+	 */
 	public void setSource(IValuationUnitFund source) {
 		this.source = source;
 	}
 
-	private class Account {
-		private WebSocket.Out<JsonNode> channel;
-		private IWalletSaving wallet;
+	/**
+	 * Shutdown actors
+	 */
+	private void shutdown() {
+		data = null;
+	}
 
-		public Account(Out<JsonNode> channel, IWalletSaving wallet) {
-			super();
-			this.channel = channel;
-			this.wallet = wallet;
-		}
-
-		public WebSocket.Out<JsonNode> getChannel() {
-			return channel;
-		}
-
-		public IWalletSaving getWalletSaving() {
-			return wallet;
+	/**
+	 *  Init for Actors
+	 */
+	private void start() {
+		if (data == null) {
+			data = InvestmentFund.values();
+			for (InvestmentFund fund : data) {
+				fund.setPrice(PRICE);
+			}
+			updateDate = getDateTimeNow();
 		}
 	}
 
+	/**
+	 * Update price new valuation
+	 * @param it
+	 */
+	private void updateDate(FundIteam it) {
+		for (InvestmentFund fund : getDate()) {
+			fund.addPrice(it.get(fund.toString()));
+		}
+		setDateTimeNow();
+	}
 }

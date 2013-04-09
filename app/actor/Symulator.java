@@ -12,6 +12,11 @@ import scala.concurrent.duration.Duration;
 import support.SUPPLIER;
 import akka.actor.ActorRef;
 
+/**
+ * Class participation allows the actor to communicate with users and to elicit new pricing every 10 seconds
+ * @author Marcin Idasiak
+ *
+ */
 public class Symulator {
     
     public Symulator(ActorRef market) {
@@ -30,7 +35,7 @@ public class Symulator {
         // Join the market
         market.tell(new Messages.Join(SUPPLIER.SYMULATOR, robotChannel), market);
         
-        // Make the robot talk every 10 seconds
+		// Make the symulator talk every 10 seconds
         Akka.system().scheduler().schedule(
             Duration.create(10, SECONDS),
             Duration.create(10, SECONDS),

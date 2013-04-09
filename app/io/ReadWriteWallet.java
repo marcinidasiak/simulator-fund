@@ -16,8 +16,16 @@ import support.SUPPLIER;
 import model.FundInWallet;
 import model.Wallet;
 
+/**
+ * Class for writing and reading from an xml file the client's portfolio, using JAXB
+ * @author Marcin Idasiak
+ *
+ */
 public class ReadWriteWallet implements IReadWriteWallet {
 
+	/**
+	 * Reading the client's portfolio from a specific location
+	 */
 	@Override
 	public Wallet readWallet(String location) throws Exception {
 		Wallet wallet = null;
@@ -32,6 +40,9 @@ public class ReadWriteWallet implements IReadWriteWallet {
 		return (wallet==null)?new Wallet(SUPPLIER.CASH, new LinkedList<FundInWallet>(), BigDecimal.ZERO, SUPPLIER.CURRENCY):wallet;
 	}
 
+	/**
+	 * Writing the client's portfolio to xml file specified location.
+	 */
 	@Override
 	public void saveWallet(String location, Wallet wallet) throws Exception {
 		final File memberXml = new File(location);

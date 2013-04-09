@@ -6,7 +6,12 @@ interfaces
 io
 model
 support
+test.enums
+test.io
 test.model
 test.support
+test.transactions
+test.valuation
 transactions
 valuation
+wallet

@@ -8,10 +8,15 @@ import java.util.Random;
 
 import support.Constraint;
 import support.FundIteam;
-
 import enums.InvestmentFund;
 import exception.RandomScopeException;
 
+/**
+ * Implementation class to set new valuations.
+ * 
+ * @author Marcin Idasiak
+ * 
+ */
 public class RandomPricingModel extends PricingModel {
 
 	EnumMap<InvestmentFund, Constraint> limit;
@@ -27,6 +32,9 @@ public class RandomPricingModel extends PricingModel {
 		setConstraints(rand);
 	}
 
+	/**
+	 * Appointment of new valuations for all funds.
+	 */
 	@Override
 	public FundIteam newPrice() {
 		FundIteam items = new FundIteam();
@@ -36,23 +44,34 @@ public class RandomPricingModel extends PricingModel {
 		return items;
 	}
 
+	/**
+	 * Creating a price on the basis of limitations.
+	 */
 	@Override
 	public BigDecimal calculateNewPrice(IConstraint con) {
-			if (con == null){
-				throw new RandomScopeException("The requirement to calculate the new price is null.");
-			}
-			int scope = con.getScope();
-			int number = rand.nextInt(scope);
-			BigDecimal result = new BigDecimal(number).divideToIntegralValue(new BigDecimal("100")).setScale(2, BigDecimal.ROUND_FLOOR).add(((Constraint) con).getDown());
-			if(con.complyWithLimits(result)){
-				return result;
-			}
-			throw new RandomScopeException("random number does not meet the requirements");
+		if (con == null) {
+			throw new RandomScopeException(
+					"The requirement to calculate the new price is null.");
+		}
+		int scope = con.getScope();
+		int number = rand.nextInt(scope);
+		BigDecimal result = new BigDecimal(number)
+				.divideToIntegralValue(new BigDecimal("100"))
+				.setScale(2, BigDecimal.ROUND_FLOOR)
+				.add(((Constraint) con).getDown());
+		if (con.complyWithLimits(result)) {
+			return result;
+		}
+		throw new RandomScopeException(
+				"random number does not meet the requirements");
 	}
 
+	/**
+	 * Defining restrictions.
+	 * @param rand
+	 */
 	private void setConstraints(Random rand) {
-		limit = new EnumMap<InvestmentFund, Constraint>(
-				InvestmentFund.class);
+		limit = new EnumMap<InvestmentFund, Constraint>(InvestmentFund.class);
 		limit.put(InvestmentFund.FRP, new Constraint(new BigDecimal("-0.05"),
 				new BigDecimal("0.40")));
 		limit.put(InvestmentFund.FO, new Constraint(new BigDecimal("-0.15"),
@@ -64,5 +83,13 @@ public class RandomPricingModel extends PricingModel {
 		limit.put(InvestmentFund.FA, new Constraint(new BigDecimal("1.0"),
 				new BigDecimal("1.10")));
 		this.rand = rand;
+	}
+
+	/**
+	 * Setting limits
+	 */
+	@Override
+	public void setConstraints(EnumMap<InvestmentFund, Constraint> limits) {
+		this.limit=limits;
 	}
 }
