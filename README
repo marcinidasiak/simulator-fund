@@ -1,4 +1,32 @@
-This is your new Play 2.1 application
+This application was developed for the recruitment process for the position of Technical Designer-Developer Java at eurobank
 =====================================
 
-This file will be packaged with your application, when using `play dist`.
+Requirements:
+-------------------------------------
+  - JDK 6 or leter
+  - Web browser support Websocket
+
+
+
+Instalation
+------------------------------------- 
+
+1. Download Play Framework (version: 2.1.0) from http://www.playframework.com/download
+
+2. Instalation Play Framework in operation system: unzip the zip file, read the README.md file to learne how to install play framework in operation system. (You can also read web page:  http://www.playframework.com/documentation/2.1.0/Installing)
+
+
+
+Launching the application for eurobank:
+--------------------------------------
+
+3. Use command "play run" in directory where it is this file which you read now.
+
+4. Open a web browser and enter the address: http://localhost:9000
+
+5. You should see web application for eurobank
+
+
+Architecture
+---------------------------------------
+I use Play framework as the backbone of my application. AKKA also used a framework based on the pattern actor. In order to maintain the connection with the browser used the WebSocket provides communication in both directions. The application was also used the strategy pattern and Factory.

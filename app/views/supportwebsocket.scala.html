@@ -1,0 +1,28 @@
+@()
+
+<div id="webSocketSupp" style="display: block;">
+	<div style="float: left;">
+		<img src="@routes.Assets.at("images/check.png")" width="36"
+			height="36" align="absmiddle">
+	</div>
+	<div
+		style="float: left; width: 600px; margin-left: 10px; position: relative; top: 8px;">
+		This browser supports WebSocket.</div>
+	<div class="clearfix"></div>
+</div>
+<div id="noWebSocketSupp">
+	<div style="float: left;">
+		<img src="@routes.Assets.at("images/cross.png")" width="36"
+			height="36" align="absmiddle">
+	</div>
+	<div style="float: left; width: 600px; margin-left: 10px;">
+		<p>Uh-oh, the browser you're using doesn't have native support for
+			WebSocket. That means you can't run this demo.</p>
+		<p>The following link lists the browsers that support WebSocket:</p>
+		<p>
+			<a href="http://caniuse.com/#feat=websockets">http://caniuse.com/#feat=websockets</a>
+		</p>
+	</div>
+	<div class="clearfix"></div>
+</div>
+

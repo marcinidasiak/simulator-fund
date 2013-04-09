@@ -21,13 +21,13 @@ public enum InvestmentFund {
 
 	private final String name;
 	private BigDecimal price;
-	private final String currency = "zł";
+	private final String currency = "PLN";
 
-	public BigDecimal getPrice() {
+	public synchronized BigDecimal getPrice() {
 		return price;
 	}
 
-	public void setPrice(BigDecimal price) {
+	public synchronized void  setPrice(BigDecimal price) {
 		int comp = price.compareTo(BigDecimal.ZERO);
 		if (comp < 0) {
 			throw new PriceException("Fund price may not be lower than 0.00 | "
@@ -39,7 +39,7 @@ public enum InvestmentFund {
 		}
 	}
 
-	public void addPrice(BigDecimal price) {
+	public synchronized void addPrice(BigDecimal price) {
 		this.price = this.price.add(format(price));
 		if (this.price.compareTo(BigDecimal.ZERO) < 0) {
 			this.price = BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_FLOOR);

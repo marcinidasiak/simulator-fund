@@ -2,12 +2,12 @@ package controllers;
 
 import org.codehaus.jackson.JsonNode;
 
-import actors.Market;
-import play.*;
-import play.mvc.*;
-import play.libs.F.*;
-
-import views.html.*;
+import play.mvc.Controller;
+import play.mvc.Result;
+import play.mvc.WebSocket;
+import support.SUPPLIER;
+import views.html.index;
+import actor.Market;
 
 public class Application extends Controller {
   
@@ -16,13 +16,13 @@ public class Application extends Controller {
     }
     
     
-    public static WebSocket<JsonNode> sockHandler() {
+    public static WebSocket<JsonNode> service() {
         return new WebSocket<JsonNode>() {
             // called when the websocket is established
             public void onReady(WebSocket.In<JsonNode> in,
                     WebSocket.Out<JsonNode> out) {
                 try {
-					Market.join("client", in, out);
+					Market.join(SUPPLIER.USERNAME, in, out);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

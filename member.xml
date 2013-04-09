@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<wallet>
+    <cash>6386.26</cash>
+    <currency>PLN</currency>
+    <funds>
+        <fund>FA</fund>
+        <numberUnit>2</numberUnit>
+        <type>A</type>
+    </funds>
+    <funds>
+        <fund>FA</fund>
+        <numberUnit>4</numberUnit>
+        <type>B</type>
+    </funds>
+    <totalValueFunds>618.00</totalValueFunds>
+</wallet>

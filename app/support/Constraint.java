@@ -20,9 +20,9 @@ public class Constraint implements IConstraint {
 			throw new PriceException("Calculate new price");
 		}
 		this.down = down.setScale(2, BigDecimal.ROUND_FLOOR);
-		;
+		
 		this.up = up.setScale(2, BigDecimal.ROUND_FLOOR);
-		;
+	
 		this.range();
 	}
 

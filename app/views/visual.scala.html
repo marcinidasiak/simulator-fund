@@ -1,0 +1,219 @@
+@()
+
+<div id="onError" class="alert-message error">
+	<p>
+		<strong>Oops!</strong> <span></span>
+	</p>
+</div>
+
+<div class="form">
+	<form>
+		<select name="code" value="">
+			<option value="FA">Fundusz Akcyjny</option>
+			<option value="FO">Fundusz Obligacji</option>
+			<option value="FRP">Fundusz Rynku Pieniężnego</option>
+			<option value="FSW">Fundusz Stabilnego Wzrostu</option>
+			<option value="FSZ">Fundusz Zrównoważony</option>
+		</select> <select name="type" value="">
+			<option value="A">Typ A</option>
+			<option value="B">Typ B</option>
+		</select> <input type="number" name="numberUnit" pattern="\d*" step="1">
+		<input type="button" class="buy btn btn-large btn-primary" value="Kup">
+		<input type="button" class="sell btn btn-large btn-primary"
+			value="Sprzedaj">
+	</form>
+</div>
+
+<div class="fund hero-unit span14">
+	<div class="row ">
+		<div class="name_title span4">
+			<b>Nazwa</b>
+		</div>
+		<div class="price_title span3">
+			<b>Cena</b>
+		</div>
+		<div class="change_title span3">
+			<b>Kurs</b>
+		</div>
+		<div class="code_title span3">
+			<b>Nazwa kodowa</b>
+		</div>
+	</div>
+	<div class="valuation row"></div>
+</div>
+
+<div class="user hero-unit span14">
+	<div class="row ">
+		<div class="name_title span4">
+			<b>Gotówka</b>
+		</div>
+		<div class="price_title span3">
+			<b>Wycena portfela </b>
+		</div>
+	</div>
+	<div class="wallet row"></div>
+	<div class="raport row"></div>
+</div>
+
+<input type="button" class="connect btn btn-large" value="Włącz">
+<input type="button" class="disconnect btn btn-primary" value="Wyłącz">
+
+<script type="text/javascript" charset="utf-8">
+	$(function() {
+		var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
+		var loc = window.location, new_uri;
+		if (loc.protocol === "https:") {
+			new_uri = "wss:";
+		} else {
+			new_uri = "ws:";
+		}
+		new_uri += "//" + loc.host + "@routes.Application.service()";
+		setGuiConnected(false);
+		
+		$('input.connect').click(function() {
+			websocket = new WS(new_uri);
+			websocket.onopen = function(evt) {
+				onOpen(evt)
+				setGuiConnected(true);
+			};
+			websocket.onclose = function(evt) {
+				onClose(evt)
+				setGuiConnected(false);
+			};
+			websocket.onmessage = function(evt) {
+				onMessage(evt)
+			};
+			websocket.onerror = function(evt) {
+				onError(evt)
+			};
+		});
+
+		$('input.disconnect').click(function() {
+			websocket.close()
+		});
+
+		$('input.buy')
+				.click(
+						function() {
+							var buy = new Object();
+							buy.code = $("select[name=code] option:selected")
+									.val();
+							buy.typefund = $(
+									"select[name=type] option:selected").val();
+							buy.numberUnit = $(
+									':input[type="number"][name="numberUnit"]')
+									.val();
+							buy.type = "buy";
+
+							websocket.send(JSON.stringify(buy))
+						});
+
+		$('input.sell')
+				.click(
+						function() {
+							var buy = new Object();
+							buy.code = $("select[name=code] option:selected")
+									.val();
+							buy.typefund = $(
+									"select[name=type] option:selected").val();
+							buy.numberUnit = $(
+									':input[type="number"][name="numberUnit"]')
+									.val();
+							buy.type = "sell";
+
+							websocket.send(JSON.stringify(buy))
+						});
+
+		function onOpen(evt) {
+		}
+
+		function onClose(evt) {
+			setGuiConnected(false);
+		}
+
+		function onMessage(evt) {
+			var data = JSON.parse(evt.data)
+
+			// Handle errors
+			if (data.error) {
+				onClose(evt)
+				$("#onError span").text(data.error)
+				$("#onError").show()
+				websocket.close()
+				return
+
+			} else {
+
+				if (data.kind == "valuation") {
+					setGuiConnected(true);
+					$(".valuation").html('')
+					$(data.valuation).each(
+							function() {
+								$(".valuation").append(
+										'<div class="name span4">' + this.name
+												+ '</div>');
+								$(".valuation").append(
+										'<div class="price span3">'
+												+ this.price + ' '
+												+ this.currency + '</div>');
+								$(".valuation").append(
+										'<div class="change span3">'
+												+ this.change + ' '
+												+ this.currency + '</div>');
+								$(".valuation").append(
+										'<div class="change span3">'
+												+ this.code + '</div>');
+							})
+				} else if (data.kind == "wallet") {
+					setGuiConnected(true);
+					$(".wallet").html('')
+					$(".wallet").append(
+							'<div class="cash span4">' + data.wallet.cash + ' '
+									+ data.wallet.currency + '</div>');
+					$(".wallet").append(
+							'<div class="totalValueFunds span3">'
+									+ data.wallet.totalValueFunds + ' '
+									+ data.wallet.currency + '</div>');
+					$(".raport").html('')				
+					$(".raport")
+							.append(
+									'<div class="funds row"><div class="fund_name span3"><b>Nazwa</b></div><div class="fund_type span3"><b>Typ</b></div><div class="fund_amount span3"><b>Ilość jednostek</b></div></div>');
+					$(data.wallet.funds).each(
+							function() {
+								$(".raport").append(
+										'<div class="iteam row"><div class="span3">'
+												+ this.fund
+												+ '</div><div class="span3">'
+												+ this.type
+												+ '</div><div class="span3">'
+												+ this.numberUnit
+												+ '</div></div>');
+							})
+				}
+
+			}
+		}
+		function onError(evt) {
+			$('.greeting').append(
+					'<span style="color: red;">ERROR:</span> ' + evt.data);
+		}
+
+		function setGuiConnected(isConnected) {
+			if (isConnected) {
+				$('input.connect').attr("disabled", "disabled");
+				$('input.disconnect').removeAttr("disabled");
+				$('input.send').removeAttr("disabled");
+				$('.fund').show();
+				$('.form').show();
+				$('.user').show();
+			} else {
+				$('input.connect').removeAttr("disabled");
+				$('input.disconnect').attr("disabled", "disabled");
+				$('input.send').attr("disabled", "disabled");
+				$('.fund').hide();
+				$('.form').hide();
+				$('.user').hide();
+			}
+		}
+	})
+</script>

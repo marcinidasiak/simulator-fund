@@ -41,11 +41,11 @@ public class InvestmentFundTest {
 	@Parameters
 	public static Collection<Object[]> data() {
 		Object[][] data = new Object[][] {
-				{ InvestmentFund.FA, "FunduszAkcyjny", "zł", new BigDecimal("100.00")},
-				{ InvestmentFund.FO, "Fundusz Obligacji", "zł", new BigDecimal("100.00")},
-				{ InvestmentFund.FRP, "Fundusz Rynku Pieniężnego", "zł", new BigDecimal("100.00")},
-				{ InvestmentFund.FSW, "Fundusz Stabilnego Wzrostu", "zł", new BigDecimal("100.00")},
-				{ InvestmentFund.FZ, "Fundusz Zrównoważony", "zł", new BigDecimal("100.00") } 
+				{ InvestmentFund.FA, "FunduszAkcyjny", "PLN", new BigDecimal("100.00")},
+				{ InvestmentFund.FO, "Fundusz Obligacji", "PLN", new BigDecimal("100.00")},
+				{ InvestmentFund.FRP, "Fundusz Rynku Pieniężnego", "PLN", new BigDecimal("100.00")},
+				{ InvestmentFund.FSW, "Fundusz Stabilnego Wzrostu", "PLN", new BigDecimal("100.00")},
+				{ InvestmentFund.FZ, "Fundusz Zrównoważony", "PLN", new BigDecimal("100.00") } 
 		};
 		return Arrays.asList(data);
 	}
