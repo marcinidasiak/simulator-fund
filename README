@@ -1,4 +1,3 @@
-This application was developed for the recruitment process for the position of Technical Designer-Developer Java at eurobank
 =====================================
 
 Requirements:
@@ -24,7 +23,7 @@ Launching the application for eurobank:
 
 4. Open a web browser and enter the address: http://localhost:9000
 
-5. You should see web application for eurobank
+5. You should see web application for simulator
 
 
 Architecture
